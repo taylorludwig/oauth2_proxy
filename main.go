@@ -38,6 +38,7 @@ func main() {
 	flagSet.Bool("pass-access-token", false, "pass OAuth access_token to upstream via X-Forwarded-Access-Token header")
 	flagSet.Bool("pass-host-header", true, "pass the request Host Header to upstream")
 	flagSet.Bool("pass-authorization-header", false, "pass the Authorization Header to upstream")
+	flagSet.String("pass-authorization-value", "", "set a static value for Authorization Bearer header (useful for authenticating with backend)")
 	flagSet.Bool("set-authorization-header", false, "set Authorization response headers (useful in Nginx auth_request mode)")
 	flagSet.Var(&skipAuthRegex, "skip-auth-regex", "bypass authentication for requests path's that match (may be given multiple times)")
 	flagSet.Bool("skip-provider-button", false, "will skip sign-in-page to directly reach the next step: oauth/start")

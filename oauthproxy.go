@@ -67,27 +67,28 @@ type OAuthProxy struct {
 	OAuthCallbackPath string
 	AuthOnlyPath      string
 
-	redirectURL         *url.URL // the url to receive requests at
-	provider            providers.Provider
-	ProxyPrefix         string
-	SignInMessage       string
-	HtpasswdFile        *HtpasswdFile
-	DisplayHtpasswdForm bool
-	serveMux            http.Handler
-	SetXAuthRequest     bool
-	PassBasicAuth       bool
-	SkipProviderButton  bool
-	PassUserHeaders     bool
-	BasicAuthPassword   string
-	PassAccessToken     bool
-	SetAuthorization    bool
-	PassAuthorization   bool
-	CookieCipher        *cookie.Cipher
-	skipAuthRegex       []string
-	skipAuthPreflight   bool
-	compiledRegex       []*regexp.Regexp
-	templates           *template.Template
-	Footer              string
+	redirectURL            *url.URL // the url to receive requests at
+	provider               providers.Provider
+	ProxyPrefix            string
+	SignInMessage          string
+	HtpasswdFile           *HtpasswdFile
+	DisplayHtpasswdForm    bool
+	serveMux               http.Handler
+	SetXAuthRequest        bool
+	PassBasicAuth          bool
+	SkipProviderButton     bool
+	PassUserHeaders        bool
+	BasicAuthPassword      string
+	PassAccessToken        bool
+	SetAuthorization       bool
+	PassAuthorization      bool
+	PassAuthorizationValue string
+	CookieCipher           *cookie.Cipher
+	skipAuthRegex          []string
+	skipAuthPreflight      bool
+	compiledRegex          []*regexp.Regexp
+	templates              *template.Template
+	Footer                 string
 }
 
 // UpstreamProxy represents an upstream server to proxy to
@@ -189,7 +190,7 @@ func NewOAuthProxy(opts *Options, validator func(string) bool) *OAuthProxy {
 	log.Printf("Cookie settings: name:%s secure(https):%v httponly:%v expiry:%s domain:%s refresh:%s", opts.CookieName, opts.CookieSecure, opts.CookieHTTPOnly, opts.CookieExpire, opts.CookieDomain, refresh)
 
 	var cipher *cookie.Cipher
-	if opts.PassAccessToken || opts.SetAuthorization || opts.PassAuthorization || (opts.CookieRefresh != time.Duration(0)) {
+	if opts.PassAccessToken || opts.SetAuthorization || opts.PassAuthorization || opts.PassAuthorizationValue != "" || (opts.CookieRefresh != time.Duration(0)) {
 		var err error
 		cipher, err = cookie.NewCipher(secretBytes(opts.CookieSecret))
 		if err != nil {
@@ -216,24 +217,25 @@ func NewOAuthProxy(opts *Options, validator func(string) bool) *OAuthProxy {
 		OAuthCallbackPath: fmt.Sprintf("%s/callback", opts.ProxyPrefix),
 		AuthOnlyPath:      fmt.Sprintf("%s/auth", opts.ProxyPrefix),
 
-		ProxyPrefix:        opts.ProxyPrefix,
-		provider:           opts.provider,
-		serveMux:           serveMux,
-		redirectURL:        redirectURL,
-		skipAuthRegex:      opts.SkipAuthRegex,
-		skipAuthPreflight:  opts.SkipAuthPreflight,
-		compiledRegex:      opts.CompiledRegex,
-		SetXAuthRequest:    opts.SetXAuthRequest,
-		PassBasicAuth:      opts.PassBasicAuth,
-		PassUserHeaders:    opts.PassUserHeaders,
-		BasicAuthPassword:  opts.BasicAuthPassword,
-		PassAccessToken:    opts.PassAccessToken,
-		SetAuthorization:   opts.SetAuthorization,
-		PassAuthorization:  opts.PassAuthorization,
-		SkipProviderButton: opts.SkipProviderButton,
-		CookieCipher:       cipher,
-		templates:          loadTemplates(opts.CustomTemplatesDir),
-		Footer:             opts.Footer,
+		ProxyPrefix:            opts.ProxyPrefix,
+		provider:               opts.provider,
+		serveMux:               serveMux,
+		redirectURL:            redirectURL,
+		skipAuthRegex:          opts.SkipAuthRegex,
+		skipAuthPreflight:      opts.SkipAuthPreflight,
+		compiledRegex:          opts.CompiledRegex,
+		SetXAuthRequest:        opts.SetXAuthRequest,
+		PassBasicAuth:          opts.PassBasicAuth,
+		PassUserHeaders:        opts.PassUserHeaders,
+		BasicAuthPassword:      opts.BasicAuthPassword,
+		PassAccessToken:        opts.PassAccessToken,
+		SetAuthorization:       opts.SetAuthorization,
+		PassAuthorization:      opts.PassAuthorization,
+		PassAuthorizationValue: opts.PassAuthorizationValue,
+		SkipProviderButton:     opts.SkipProviderButton,
+		CookieCipher:           cipher,
+		templates:              loadTemplates(opts.CustomTemplatesDir),
+		Footer:                 opts.Footer,
 	}
 }
 
@@ -849,6 +851,9 @@ func (p *OAuthProxy) Authenticate(rw http.ResponseWriter, req *http.Request) int
 	}
 	if p.PassAuthorization && session.IDToken != "" {
 		req.Header["Authorization"] = []string{fmt.Sprintf("Bearer %s", session.IDToken)}
+	}
+	if p.PassAuthorizationValue != "" {
+		req.Header["Authorization"] = []string{fmt.Sprintf("Bearer %s", p.PassAuthorizationValue)}
 	}
 	if p.SetAuthorization && session.IDToken != "" {
 		rw.Header().Set("Authorization", fmt.Sprintf("Bearer %s", session.IDToken))

@@ -213,6 +213,7 @@ Usage of oauth2_proxy:
   -login-url string: Authentication endpoint
   -pass-access-token: pass OAuth access_token to upstream via X-Forwarded-Access-Token header
   -pass-authorization-header: pass OIDC IDToken to upstream via Authorization Bearer header
+  -pass-authorization-value:  set a static value for Authorization Bearer header (useful for authenticating with backend)
   -pass-basic-auth: pass HTTP Basic Auth, X-Forwarded-User and X-Forwarded-Email information to upstream (default true)
   -pass-host-header: pass the request Host Header to upstream (default true)
   -pass-user-headers: pass X-Forwarded-User and X-Forwarded-Email information to upstream (default true)
@@ -261,6 +262,7 @@ The following environment variables can be used in place of the corresponding co
 - `OAUTH2_PROXY_COOKIE_EXPIRE`
 - `OAUTH2_PROXY_COOKIE_REFRESH`
 - `OAUTH2_PROXY_SIGNATURE_KEY`
+- `AUTHORIZATION_HEADER_VALUE`
 
 ## SSL Configuration
 
