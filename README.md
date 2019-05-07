@@ -42,12 +42,14 @@ You will need to register an OAuth application with a Provider (Google, GitHub o
 
 Valid providers are :
 
-- [Google](#google-auth-provider) _default_
-- [Azure](#azure-auth-provider)
-- [Facebook](#facebook-auth-provider)
-- [GitHub](#github-auth-provider)
-- [GitLab](#gitlab-auth-provider)
-- [LinkedIn](#linkedin-auth-provider)
+* [Google](#google-auth-provider) *default*
+* [Azure](#azure-auth-provider)
+* [Facebook](#facebook-auth-provider)
+* [GitHub](#github-auth-provider)
+* [GitLab](#gitlab-auth-provider)
+* [LinkedIn](#linkedin-auth-provider)
+* [MyUSA](#myusa-auth-provider)
+* [Bitbucket](#bitbucket-auth-provider)
 
 The provider can be selected using the `provider` configuration value.
 
@@ -149,6 +151,18 @@ For LinkedIn, the registration steps are:
 For adding an application to the Microsoft Azure AD follow [these steps to add an application](https://azure.microsoft.com/en-us/documentation/articles/active-directory-integrating-applications/).
 
 Take note of your `TenantId` if applicable for your situation. The `TenantId` can be used to override the default `common` authorization server with a tenant specific server.
+
+### Bitbucket Auth Provider
+
+The [Bitbucket](https://bitbucket.org) provider.
+
+For Bitbucket, follow the [registration steps to create an OAuth client](https://confluence.atlassian.com/bitbucket/oauth-on-bitbucket-cloud-238027431.html#OAuthonBitbucketCloud-Createaconsumer).
+
+The Bitbucket auth provider supports one additional parameter to restrict
+authentication to members of a given Bitbucket team. Restricting by team is
+normally accompanied with `--email-domain=*`
+
+    -bitbucket-team="": restrict logins to members of this team
 
 ### OpenID Connect Provider
 
