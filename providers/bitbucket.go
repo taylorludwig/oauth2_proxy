@@ -7,7 +7,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 
-	"github.com/bitly/oauth2_proxy/api"
+	"github.com/pusher/oauth2_proxy/api"
 )
 
 type BitbucketProvider struct {
@@ -75,7 +75,7 @@ func (p *BitbucketProvider) GetEmailAddress(s *SessionState) (string, error) {
 		log.Printf("failed building request %s", err)
 		return "", err
 	}
-	err = api.RequestJson(req, &emails)
+	err = api.RequestJSON(req, &emails)
 	if err != nil {
 		log.Printf("failed making request %s", err)
 		debug(httputil.DumpRequestOut(req, true))
@@ -93,7 +93,7 @@ func (p *BitbucketProvider) GetEmailAddress(s *SessionState) (string, error) {
 			log.Printf("failed building request %s", err)
 			return "", err
 		}
-		err = api.RequestJson(req, &teams)
+		err = api.RequestJSON(req, &teams)
 		if err != nil {
 			log.Printf("failed requesting teams membership %s", err)
 			debug(httputil.DumpRequestOut(req, true))
