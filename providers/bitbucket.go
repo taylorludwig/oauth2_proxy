@@ -1,6 +1,7 @@
 package providers
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -12,7 +13,8 @@ import (
 
 type BitbucketProvider struct {
 	*ProviderData
-	Team string
+	Team  string
+	Group string
 }
 
 func NewBitbucketProvider(p *ProviderData) *BitbucketProvider {
@@ -46,6 +48,10 @@ func NewBitbucketProvider(p *ProviderData) *BitbucketProvider {
 
 func (p *BitbucketProvider) SetTeam(team string) {
 	p.Team = team
+}
+
+func (p *BitbucketProvider) SetGroup(group string) {
+	p.Group = group
 }
 
 func debug(data []byte, err error) {
@@ -111,6 +117,13 @@ func (p *BitbucketProvider) GetEmailAddress(s *SessionState) (string, error) {
 			log.Printf("team membership test failed, access denied")
 			return "", nil
 		}
+
+		if p.Group != "" {
+			err = p.CheckGroupMembership(s)
+			if err != nil {
+				return "", err
+			}
+		}
 	}
 
 	for _, email := range emails.Values {
@@ -120,4 +133,71 @@ func (p *BitbucketProvider) GetEmailAddress(s *SessionState) (string, error) {
 	}
 
 	return "", nil
+}
+
+func (p *BitbucketProvider) CheckGroupMembership(s *SessionState) error {
+	log.Printf("Checking if user belongs to group %s", p.Group)
+
+	var user struct {
+		Username string `json:"username"`
+	}
+	var groupMembers []struct {
+		Username string `json:"username"`
+	}
+
+	// Get the username
+	userURL := &url.URL{}
+	*userURL = *p.ValidateURL
+	userURL.Path = "/2.0/user"
+	req, err := http.NewRequest("GET",
+		userURL.String()+"?role=member&access_token="+s.AccessToken, nil)
+	if err != nil {
+		log.Printf("failed building request %s", err)
+		return err
+	}
+
+	err = api.RequestJSON(req, &user)
+	if err != nil {
+		log.Printf("failed requesting user details %s", err)
+		debug(httputil.DumpRequestOut(req, true))
+		return err
+	}
+
+	log.Printf("Bitbucket authed username=%s", user.Username)
+
+	if user.Username == "" {
+		return errors.New("Could not find bitbucket username")
+	}
+
+	// Get members of group
+	groupURL := &url.URL{}
+	*groupURL = *p.ValidateURL
+	groupURL.Path = fmt.Sprintf("/1.0/groups/%s/%s/members", p.Team, p.Group)
+	req, err = http.NewRequest("GET",
+		groupURL.String()+"?role=member&access_token="+s.AccessToken, nil)
+	if err != nil {
+		log.Printf("failed building request %s", err)
+		return err
+	}
+
+	err = api.RequestJSON(req, &groupMembers)
+	if err != nil {
+		log.Printf("failed requesting group members %s", err)
+		debug(httputil.DumpRequestOut(req, true))
+		return err
+	}
+
+	log.Printf("Got group members %v", groupMembers)
+
+	for _, member := range groupMembers {
+		if user.Username == member.Username {
+			log.Printf("Found user in group member list")
+			return nil
+		}
+	}
+
+	err = errors.New("User not found in group list")
+	log.Print(err)
+
+	return err
 }

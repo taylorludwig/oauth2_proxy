@@ -163,6 +163,7 @@ authentication to members of a given Bitbucket team. Restricting by team is
 normally accompanied with `--email-domain=*`
 
     -bitbucket-team="": restrict logins to members of this team
+    -bitbucket-group="": also restrict logins to members of this team's group
 
 ### OpenID Connect Provider
 
