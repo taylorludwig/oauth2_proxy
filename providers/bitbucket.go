@@ -139,13 +139,14 @@ func (p *BitbucketProvider) CheckGroupMembership(s *SessionState) error {
 	log.Printf("Checking if user belongs to group %s", p.Group)
 
 	var user struct {
-		Username string `json:"username"`
+		Username  string `json:"username"`
+		AccountID string `json:"account_id"`
 	}
 	var groupMembers []struct {
-		Username string `json:"username"`
+		AccountID string `json:"account_id"`
 	}
 
-	// Get the username
+	// Get the username and account_id
 	userURL := &url.URL{}
 	*userURL = *p.ValidateURL
 	userURL.Path = "/2.0/user"
@@ -163,10 +164,10 @@ func (p *BitbucketProvider) CheckGroupMembership(s *SessionState) error {
 		return err
 	}
 
-	log.Printf("Bitbucket authed username=%s", user.Username)
+	log.Printf("Bitbucket authed username=%s account_id=%s", user.Username, user.AccountID)
 
-	if user.Username == "" {
-		return errors.New("Could not find bitbucket username")
+	if user.AccountID == "" {
+		return errors.New("Could not find bitbucket account_id")
 	}
 
 	// Get members of group
@@ -190,7 +191,7 @@ func (p *BitbucketProvider) CheckGroupMembership(s *SessionState) error {
 	log.Printf("Got group members %v", groupMembers)
 
 	for _, member := range groupMembers {
-		if user.Username == member.Username {
+		if user.AccountID == member.AccountID {
 			log.Printf("Found user in group member list")
 			return nil
 		}
